@@ -14,7 +14,7 @@ let flashEffects = [];
 let gameSpeed = 1;
 let startingCount = 3;
 let imagesLoaded = 0;
-let totalImages = 2; // rock and scissors
+let totalImages = 3; // rock, scissors, and paper
 
 let gameStats =
 {
@@ -53,6 +53,19 @@ scissorsImage.onload = function() {
 };
 scissorsImage.onerror = function() {
     console.log('Failed to load scissors image - will use yellow circle instead');
+    imagesLoaded++;
+    checkAllImagesLoaded();
+};
+
+const paperImage = new Image();
+paperImage.src = './assets/paper.png';
+paperImage.onload = function() {
+    console.log('Paper image loaded successfully!');
+    imagesLoaded++;
+    checkAllImagesLoaded();
+};
+paperImage.onerror = function() {
+    console.log('Failed to load paper image - will use blue circle instead');
     imagesLoaded++;
     checkAllImagesLoaded();
 };
@@ -476,7 +489,7 @@ function drawAllObjects() {
             ctx.shadowBlur = 20 * obj.pulseIntensity;
         }
         
-        // Draw images for Rock and Scissors if loaded, otherwise draw circles
+        // Draw images for Rock, Scissors, and Paper if loaded, otherwise draw circles
         if (obj.type === 'Rock' && rockImage.complete && rockImage.naturalWidth > 0) {
             // Draw rock image - make it bigger than the circles
             const size = obj.radius * 3;
@@ -487,6 +500,11 @@ function drawAllObjects() {
             const size = obj.radius * 3;
             const offset = size / 2;
             ctx.drawImage(scissorsImage, obj.x - offset, obj.y - offset, size, size);
+        } else if (obj.type === 'Paper' && paperImage.complete && paperImage.naturalWidth > 0) {
+            // Draw paper image - make it bigger than the circles
+            const size = obj.radius * 3;
+            const offset = size / 2;
+            ctx.drawImage(paperImage, obj.x - offset, obj.y - offset, size, size);
         } else {
             // Draw colored circles with letters (for Paper, Scissors, or Rock if image failed)
             let drawColor = obj.color;
