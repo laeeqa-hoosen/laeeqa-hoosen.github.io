@@ -1,0 +1,241 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #2c3e50;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.game-container {
+    text-align: center;
+    background-color: #34495e;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+    margin-bottom: 20px;
+    color: #ecf0f1;
+    font-size: 3.2em; /* Increased from 2.5em */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+#gameCanvas {
+    width: 1200px;
+    height: 800px;
+    border: 2px solid #34495e;
+    background-color: #2c3e50;
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+.main-controls {
+    display: flex;
+    gap: 15px;
+}
+
+.speed-controls,
+.spawn-controls,
+.count-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.speed-controls label,
+.spawn-controls label,
+.count-controls label {
+    font-weight: bold;
+    color: #ecf0f1;
+    margin-right: 5px;
+    font-size: 18px; /* Add this - was default 16px */
+}
+
+.speed-btn,
+.spawn-btn {
+    background-color: #34495e;
+    color: white;
+    border: 2px solid #3498db;
+    padding: 10px 18px; /* Increased padding */
+    font-size: 16px; /* Increased from 14px */
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.speed-btn:hover,
+.spawn-btn:hover {
+    background-color: #3498db;
+    transform: translateY(-1px);
+}
+
+.speed-btn.active {
+    background-color: #3498db;
+    border-color: #2980b9;
+}
+
+.spawn-btn {
+    border-color: #e74c3c;
+}
+
+.spawn-btn:hover {
+    background-color: #e74c3c;
+}
+
+#startCount {
+    width: 60px;
+    padding: 8px;
+    border: 2px solid #3498db;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 14px;
+    background-color: #2c3e50;
+    color: white;
+}
+
+#applyCountBtn {
+    background-color: #27ae60;
+    border-color: #2ecc71;
+}
+
+#applyCountBtn:hover {
+    background-color: #2ecc71;
+}
+
+button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 15px 30px; /* Increased from 12px 25px */
+    font-size: 18px; /* Increased from 16px */
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+button:active {
+    transform: translateY(2px);
+}
+
+.game-status {
+    margin-bottom: 15px;
+}
+
+.counts {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 10px;
+    font-size: 22px; /* Increased from 18px */
+    font-weight: bold;
+}
+
+.rock-count {
+    color: #e74c3c;
+}
+
+.paper-count {
+    color: #3498db;
+}
+
+.scissors-count {
+    color: #f1c40f;
+}
+
+.game-message {
+    font-size: 24px; /* Increased from 20px */
+    font-weight: bold;
+    min-height: 25px;
+    color: #2ecc71;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 10px 0;
+    font-size: 18px; /* Increased from 16px */
+    color: #bdc3c7;
+    background-color: rgba(52, 73, 94, 0.8);
+    padding: 10px; /* Increased padding from 8px */
+    border-radius: 5px;
+    font-weight: bold; /* Add this to make it more prominent */
+}
+
+.settings-toggle {
+    background-color: #95a5a6;
+    border-color: #7f8c8d;
+    font-size: 18px; /* Increased from 16px */
+    padding: 15px 25px; /* Increased from 12px 20px */
+}
+
+.settings-toggle:hover {
+    background-color: #7f8c8d;
+}
+
+.settings-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.settings-panel {
+    background-color: rgba(44, 62, 80, 0.95);
+    border: 2px solid #34495e;
+    border-radius: 10px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: absolute;
+    top: 70px;
+    right: 0;
+    min-width: 250px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.settings-panel.hidden {
+    max-height: 0;
+    padding: 0 20px;
+    border-width: 0;
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+.settings-panel:not(.hidden) {
+    max-height: 400px;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.settings-panel .speed-controls,
+.settings-panel .spawn-controls,
+.settings-panel .count-controls {
+    margin-bottom: 15px;
+}
+
+.settings-panel .speed-controls:last-child,
+.settings-panel .spawn-controls:last-child,
+.settings-panel .count-controls:last-child {
+    margin-bottom: 0;
+}

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors Bouncer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Settings button in top-right corner -->
+        <div class="settings-container">
+            <button id="settingsToggle" class="settings-toggle">⚙️ Settings</button>
+        </div>
+        
+        <h1>Rock Paper Scissors Game</h1>
+
+        <div class="game-status">
+            <div class="counts">
+                <span class="rock-count">Rocks: 3</span>
+                <span class="paper-count">Papers: 3</span>
+                <span class="scissors-count">Scissors: 3</span>
+            </div>
+            <div class="stats">
+                <span class="total-battles">Battles: 0</span>
+                <span class="game-time">Time: 0s</span>
+            </div>
+            <div class="game-message"></div>
+        </div>
+
+        <canvas id="gameCanvas" width="1200" height="800"></canvas>
+        
+        <div class="controls">
+            <div class="main-controls">
+                <button id="startBtn">Start</button>
+                <button id="resetBtn">Reset</button>
+            </div>
+            
+            <div id="settingsPanel" class="settings-panel hidden">
+                <div class="speed-controls">
+                    <label>Speed:</label>
+                    <button id="slowBtn" class="speed-btn">Slow</button>
+                    <button id="normalBtn" class="speed-btn active">Normal</button>
+                    <button id="fastBtn" class="speed-btn">Fast</button>
+                    <button id="ultraFastBtn" class="speed-btn">Ultra</button>
+                    <button id="ludicrousBtn" class="speed-btn">Ludicrous</button>
+                </div>
+                
+                <div class="spawn-controls">
+                    <label>Spawn:</label>
+                    <button id="spawnRockBtn" class="spawn-btn">Rock</button>
+                    <button id="spawnPaperBtn" class="spawn-btn">Paper</button>
+                    <button id="spawnScissorsBtn" class="spawn-btn">Scissors</button>
+                </div>
+                
+                <div class="count-controls">
+                    <label>Starting Count:</label>
+                    <input type="number" id="startCount" min="1" max="10" value="3">
+                    <button id="applyCountBtn" class="spawn-btn">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="src/game.js"></script>
+</body>
+</html>
