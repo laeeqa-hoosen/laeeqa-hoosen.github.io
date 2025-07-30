@@ -5,6 +5,9 @@ const ctx = canvas.getContext('2d');
 canvas.width = 1200;
 canvas.height = 800;
 
+// Game Mode System
+let currentGameMode = null;
+
 let gameRunning = false;
 let animationId;
 
@@ -125,7 +128,8 @@ settingsToggle.addEventListener('click', () => {
 
 function checkAllImagesLoaded() {
     if (imagesLoaded >= totalImages) {
-        // All images loaded, initialize and draw the game
+        // All images loaded, initialize game mode and draw the game
+        currentGameMode = new ClassicMode();
         initializeGame();
         clearCanvas();
         drawAllObjects();
@@ -234,25 +238,8 @@ function createFlashEffect(x, y) {
 
 function initializeGame()
 {
-    rpsObjects = [];
-    flashEffects = [];
-
-    for (let i = 0; i < startingCount; i++) {
-        let x = Math.random() * (canvas.width - 100) + 50;
-        let y = Math.random() * (canvas.height - 100) + 50;
-        rpsObjects.push(createRPSObject('Rock', x, y));
-    }
-
-    for (let i = 0; i < startingCount; i++) {
-        let x = Math.random() * (canvas.width - 100) + 50;
-        let y = Math.random() * (canvas.height - 100) + 50;
-        rpsObjects.push(createRPSObject('Paper', x, y));
-    }
-
-    for (let i = 0; i < startingCount; i++) {
-        let x = Math.random() * (canvas.width - 100) + 50;
-        let y = Math.random() * (canvas.height - 100) + 50;
-        rpsObjects.push(createRPSObject('Scissors', x, y));
+    if (currentGameMode) {
+        currentGameMode.init();
     }
 }
 
@@ -286,9 +273,9 @@ function resetGame()
     startBtn.style.backgroundColor = '#3498db';
     startBtn.style.cursor = 'pointer';
 
-    gameStats.totalBattles = 0;
-    gameStats.gameStartTime = 0;
-    gameStats.gameTime = 0;
+    if (currentGameMode) {
+        currentGameMode.reset();
+    }
     initializeGame();
     updateGameStatus();
     clearCanvas();
@@ -312,27 +299,15 @@ function updateGameStatus()
 
     updateStatsDisplay();
 
-    const typesRemaining = Object.values(counts).filter(count => count > 0).length;
-
-    if (typesRemaining === 1) {
-        const winner = Object.keys(counts).find(type => counts[type] > 0);
-        gameMessageElement.textContent = `Game Over! ${winner} wins!`;
+    // Check game end condition using current game mode
+    if (currentGameMode && currentGameMode.checkGameEnd()) {
+        gameMessageElement.textContent = currentGameMode.getGameEndMessage();
         pauseGame();
 
         startBtn.disabled = true;
         startBtn.textContent = 'Game Over';
         startBtn.style.backgroundColor = '#7f8c8d';
         startBtn.style.cursor = 'not-allowed';
-
-    } else if (typesRemaining === 0) {
-        gameMessageElement.textContent = 'Game Over! No winners!';
-        pauseGame();
-
-        startBtn.disabled = true;
-        startBtn.textContent = 'Game Over';
-        startBtn.style.backgroundColor = '#7f8c8d';
-        startBtn.style.cursor = 'not-allowed';
-
     } else {
         gameMessageElement.textContent = '...';
     }
@@ -417,27 +392,17 @@ function checkCollisions() {
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 
                 if (distance < obj1.radius + obj2.radius) {
-                    const winner = getRPSWinner(obj1.type, obj2.type);
-                    
-                    if (winner === obj1.type) {
-                        collisionSound.currentTime = 0;
-                        collisionSound.play().catch(() => {});
-
-                        gameStats.totalBattles++;
-                        obj1.winAnimation = 30;
+                    if (currentGameMode) {
+                        const winner = currentGameMode.onCollision(obj1, obj2);
                         
-                        if (!objectsToRemove.includes(idx2)) {
-                            objectsToRemove.push(idx2);
-                        }
-                    } else if (winner === obj2.type) {
-                        collisionSound.currentTime = 0;
-                        collisionSound.play().catch(() => {});
-
-                        gameStats.totalBattles++;
-                        obj2.winAnimation = 30;
-                        
-                        if (!objectsToRemove.includes(idx1)) {
-                            objectsToRemove.push(idx1);
+                        if (winner === obj1) {
+                            if (!objectsToRemove.includes(idx2)) {
+                                objectsToRemove.push(idx2);
+                            }
+                        } else if (winner === obj2) {
+                            if (!objectsToRemove.includes(idx1)) {
+                                objectsToRemove.push(idx1);
+                            }
                         }
                     }
                 }
