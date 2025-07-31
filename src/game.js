@@ -11,8 +11,9 @@ let currentGameMode = null;
 let gameRunning = false;
 let animationId;
 
-let rpsObjects = []; 
+let rpsObjects = [];
 let flashEffects = [];
+let powerups = []; // Array for powerup/effect objects
 
 let gameSpeed = 1;
 let startingCount = 3;
@@ -130,6 +131,7 @@ function checkAllImagesLoaded() {
     if (imagesLoaded >= totalImages) {
         // All images loaded, initialize game mode and draw the game
         currentGameMode = new ClassicMode();
+        if (currentGameMode.createUI) currentGameMode.createUI();
         initializeGame();
         clearCanvas();
         drawAllObjects();
@@ -174,28 +176,31 @@ function applyStartingCount() {
     }
 }
 
+
 function spawnObject(type) {
     const counts = { Rock: 0, Paper: 0, Scissors: 0 };
     rpsObjects.forEach(obj => counts[obj.type]++);
     const typesRemaining = Object.values(counts).filter(count => count > 0).length;
-    
     if (typesRemaining <= 1) {
         return;
     }
-    
     let x, y, attempts = 0;
     do {
         x = Math.random() * (canvas.width - 100) + 50;
         y = Math.random() * (canvas.height - 100) + 50;
         attempts++;
     } while (attempts < 50 && isPositionOccupied(x, y));
-    
     const newObject = createRPSObject(type, x, y);
-
     newObject.speedX *= gameSpeed;
     newObject.speedY *= gameSpeed;
-    
     rpsObjects.push(newObject);
+    // Allow mode to react to spawns
+    if (currentGameMode && currentGameMode.onSpawn) currentGameMode.onSpawn(type, newObject);
+}
+
+// Batch spawn for modes that want to spawn multiple at once
+function spawnObjects(types) {
+    types.forEach(type => spawnObject(type));
 }
 
 function isPositionOccupied(x, y) {
@@ -268,6 +273,9 @@ function resetGame()
 {
     pauseGame();
 
+    // Remove any mode-specific UI
+    if (currentGameMode && currentGameMode.removeUI) currentGameMode.removeUI();
+
     startBtn.disabled = false;
     startBtn.textContent = 'Start';
     startBtn.style.backgroundColor = '#3498db';
@@ -275,6 +283,7 @@ function resetGame()
 
     if (currentGameMode) {
         currentGameMode.reset();
+        if (currentGameMode.createUI) currentGameMode.createUI();
     }
     initializeGame();
     updateGameStatus();
@@ -284,8 +293,8 @@ function resetGame()
 
 function updateGameStatus()
 {
-    if (gameRunning && gameStats.gameStartTime > 0) {
-        gameStats.gameTime = Math.floor((Date.now() - gameStats.gameStartTime) / 1000);
+    if (gameRunning && currentGameMode && currentGameMode.updateTimer) {
+        currentGameMode.updateTimer();
     }
 
     const counts = {Rock: 0, Paper: 0, Scissors: 0};
@@ -298,6 +307,9 @@ function updateGameStatus()
     scissorsCountElement.textContent = `Scissors: ${counts.Scissors}`;
 
     updateStatsDisplay();
+
+    // Allow mode to update its own UI
+    if (currentGameMode && currentGameMode.updateUI) currentGameMode.updateUI();
 
     // Check game end condition using current game mode
     if (currentGameMode && currentGameMode.checkGameEnd()) {
@@ -317,9 +329,14 @@ function gameLoop()
 {
     if (!gameRunning) return;
 
+
     clearCanvas();
     updateAllObjects();
     checkCollisions();
+    // Update powerups/effects (if any)
+    if (currentGameMode && currentGameMode.updatePowerups) {
+        currentGameMode.updatePowerups();
+    }
     updateGameStatus();
     drawAllObjects();
 
@@ -327,8 +344,13 @@ function gameLoop()
 }
 
 function updateStatsDisplay() {
-    totalBattlesElement.textContent = `Battles: ${gameStats.totalBattles}`;
-    gameTimeElement.textContent = `Time: ${gameStats.gameTime}s`;
+    if (currentGameMode) {
+        totalBattlesElement.textContent = `Battles: ${currentGameMode.getScore()}`;
+        gameTimeElement.textContent = `Time: ${currentGameMode.getTime()}s`;
+    } else {
+        totalBattlesElement.textContent = `Battles: 0`;
+        gameTimeElement.textContent = `Time: 0s`;
+    }
 }
 
 function updateAllObjects() 
@@ -494,6 +516,10 @@ function drawAllObjects() {
         
         ctx.restore();
     });
+    // Draw powerups/effects (if any)
+    if (currentGameMode && currentGameMode.drawPowerups) {
+        currentGameMode.drawPowerups(ctx);
+    }
 }
 
 function clearCanvas()

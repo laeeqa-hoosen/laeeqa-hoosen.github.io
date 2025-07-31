@@ -1,5 +1,26 @@
 // Base GameMode class that defines the interface for all game modes
 class GameMode {
+    // Powerup/Effect system hooks - override in specific modes
+    spawnPowerup(type, options) {
+        // Called to spawn a new powerup/effect
+        // type: string, options: object (position, duration, etc)
+    }
+
+    applyPowerup(target, powerup) {
+        // Called to apply a powerup/effect to a target (object, player, etc)
+    }
+
+    updatePowerups(deltaTime) {
+        // Called every frame to update powerup/effect state
+    }
+
+    removePowerup(powerup) {
+        // Called to remove a powerup/effect
+    }
+
+    drawPowerups(ctx) {
+        // Called to render powerups/effects (if needed)
+    }
     constructor(name) {
         this.name = name;
         this.isActive = false;
@@ -72,6 +93,30 @@ class GameMode {
 
     removeUI() {
         // Remove mode-specific UI elements
+    }
+
+    // Timer and scoring hooks - override in specific modes for custom logic
+    getTime() {
+        // Return the current game time (in seconds)
+        if (typeof gameStats !== 'undefined') {
+            return gameStats.gameTime;
+        }
+        return 0;
+    }
+
+    getScore() {
+        // Return the current score (e.g., total battles)
+        if (typeof gameStats !== 'undefined') {
+            return gameStats.totalBattles;
+        }
+        return 0;
+    }
+
+    updateTimer(deltaTime) {
+        // Update timer logic (called every frame)
+        if (typeof gameStats !== 'undefined' && gameStats.gameStartTime > 0) {
+            gameStats.gameTime = Math.floor((Date.now() - gameStats.gameStartTime) / 1000);
+        }
     }
 
     // Helper methods available to all modes
