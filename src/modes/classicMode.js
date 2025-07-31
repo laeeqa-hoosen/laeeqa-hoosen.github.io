@@ -1,5 +1,11 @@
 // Classic Mode - your current game logic
 class ClassicMode extends GameMode {
+    // Powerup/Effect system hooks (no-op for classic mode)
+    spawnPowerup(type, options) {}
+    applyPowerup(target, powerup) {}
+    updatePowerups(deltaTime) {}
+    removePowerup(powerup) {}
+    drawPowerups(ctx) {}
     constructor() {
         super('classic');
     }
@@ -33,25 +39,53 @@ class ClassicMode extends GameMode {
         // The main game loop handles object movement and collisions
     }
 
+    /**
+     * Handles collision between two objects.
+     * Return the winner object (loser will be removed), or null for tie.
+     * For custom modes, you can:
+     *   - Return null for no elimination
+     *   - Return an array of objects to remove
+     *   - Modify objects (e.g., infection, health)
+     *   - Trigger powerups, effects, etc.
+     */
     onCollision(obj1, obj2) {
-        // Use the default RPS collision logic
+        // Classic RPS: winner stays, loser is removed
         const winner = this.getRPSWinner(obj1, obj2);
-        
         if (winner) {
             // Play sound and add win animation
             collisionSound.currentTime = 0;
             collisionSound.play().catch(() => {});
-            gameStats.totalBattles++;
+            this.incrementScore();
             winner.winAnimation = 30;
         }
-        
         return winner;
     }
 
     reset() {
         // Reset any classic mode specific state
-        gameStats.totalBattles = 0;
-        gameStats.gameStartTime = 0;
-        gameStats.gameTime = 0;
+        if (typeof gameStats !== 'undefined') {
+            gameStats.totalBattles = 0;
+            gameStats.gameStartTime = 0;
+            gameStats.gameTime = 0;
+        }
+    }
+
+    // Timer and scoring hooks (delegating to base for now)
+    getTime() {
+        return super.getTime();
+    }
+
+    getScore() {
+        return super.getScore();
+    }
+
+    updateTimer(deltaTime) {
+        super.updateTimer(deltaTime);
+    }
+
+    incrementScore() {
+        if (typeof gameStats !== 'undefined') {
+            gameStats.totalBattles++;
+        }
     }
 }
