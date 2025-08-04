@@ -5,11 +5,15 @@ const ctx = canvas.getContext('2d');
 canvas.width = 1200;
 canvas.height = 800;
 
+// Game Mode System
+let currentGameMode = null;
+
 let gameRunning = false;
 let animationId;
 
-let rpsObjects = []; 
+let rpsObjects = [];
 let flashEffects = [];
+let powerups = []; // Array for powerup/effect objects
 
 let gameSpeed = 1;
 let startingCount = 3;
@@ -125,7 +129,9 @@ settingsToggle.addEventListener('click', () => {
 
 function checkAllImagesLoaded() {
     if (imagesLoaded >= totalImages) {
-        // All images loaded, initialize and draw the game
+        // All images loaded, initialize game mode and draw the game
+        currentGameMode = new ClassicMode();
+        if (currentGameMode.createUI) currentGameMode.createUI();
         initializeGame();
         clearCanvas();
         drawAllObjects();
@@ -170,28 +176,31 @@ function applyStartingCount() {
     }
 }
 
+
 function spawnObject(type) {
     const counts = { Rock: 0, Paper: 0, Scissors: 0 };
     rpsObjects.forEach(obj => counts[obj.type]++);
     const typesRemaining = Object.values(counts).filter(count => count > 0).length;
-    
     if (typesRemaining <= 1) {
         return;
     }
-    
     let x, y, attempts = 0;
     do {
         x = Math.random() * (canvas.width - 100) + 50;
         y = Math.random() * (canvas.height - 100) + 50;
         attempts++;
     } while (attempts < 50 && isPositionOccupied(x, y));
-    
     const newObject = createRPSObject(type, x, y);
-
     newObject.speedX *= gameSpeed;
     newObject.speedY *= gameSpeed;
-    
     rpsObjects.push(newObject);
+    // Allow mode to react to spawns
+    if (currentGameMode && currentGameMode.onSpawn) currentGameMode.onSpawn(type, newObject);
+}
+
+// Batch spawn for modes that want to spawn multiple at once
+function spawnObjects(types) {
+    types.forEach(type => spawnObject(type));
 }
 
 function isPositionOccupied(x, y) {
@@ -234,25 +243,8 @@ function createFlashEffect(x, y) {
 
 function initializeGame()
 {
-    rpsObjects = [];
-    flashEffects = [];
-
-    for (let i = 0; i < startingCount; i++) {
-        let x = Math.random() * (canvas.width - 100) + 50;
-        let y = Math.random() * (canvas.height - 100) + 50;
-        rpsObjects.push(createRPSObject('Rock', x, y));
-    }
-
-    for (let i = 0; i < startingCount; i++) {
-        let x = Math.random() * (canvas.width - 100) + 50;
-        let y = Math.random() * (canvas.height - 100) + 50;
-        rpsObjects.push(createRPSObject('Paper', x, y));
-    }
-
-    for (let i = 0; i < startingCount; i++) {
-        let x = Math.random() * (canvas.width - 100) + 50;
-        let y = Math.random() * (canvas.height - 100) + 50;
-        rpsObjects.push(createRPSObject('Scissors', x, y));
+    if (currentGameMode) {
+        currentGameMode.init();
     }
 }
 
@@ -281,14 +273,18 @@ function resetGame()
 {
     pauseGame();
 
+    // Remove any mode-specific UI
+    if (currentGameMode && currentGameMode.removeUI) currentGameMode.removeUI();
+
     startBtn.disabled = false;
     startBtn.textContent = 'Start';
     startBtn.style.backgroundColor = '#3498db';
     startBtn.style.cursor = 'pointer';
 
-    gameStats.totalBattles = 0;
-    gameStats.gameStartTime = 0;
-    gameStats.gameTime = 0;
+    if (currentGameMode) {
+        currentGameMode.reset();
+        if (currentGameMode.createUI) currentGameMode.createUI();
+    }
     initializeGame();
     updateGameStatus();
     clearCanvas();
@@ -297,8 +293,8 @@ function resetGame()
 
 function updateGameStatus()
 {
-    if (gameRunning && gameStats.gameStartTime > 0) {
-        gameStats.gameTime = Math.floor((Date.now() - gameStats.gameStartTime) / 1000);
+    if (gameRunning && currentGameMode && currentGameMode.updateTimer) {
+        currentGameMode.updateTimer();
     }
 
     const counts = {Rock: 0, Paper: 0, Scissors: 0};
@@ -312,27 +308,18 @@ function updateGameStatus()
 
     updateStatsDisplay();
 
-    const typesRemaining = Object.values(counts).filter(count => count > 0).length;
+    // Allow mode to update its own UI
+    if (currentGameMode && currentGameMode.updateUI) currentGameMode.updateUI();
 
-    if (typesRemaining === 1) {
-        const winner = Object.keys(counts).find(type => counts[type] > 0);
-        gameMessageElement.textContent = `Game Over! ${winner} wins!`;
+    // Check game end condition using current game mode
+    if (currentGameMode && currentGameMode.checkGameEnd()) {
+        gameMessageElement.textContent = currentGameMode.getGameEndMessage();
         pauseGame();
 
         startBtn.disabled = true;
         startBtn.textContent = 'Game Over';
         startBtn.style.backgroundColor = '#7f8c8d';
         startBtn.style.cursor = 'not-allowed';
-
-    } else if (typesRemaining === 0) {
-        gameMessageElement.textContent = 'Game Over! No winners!';
-        pauseGame();
-
-        startBtn.disabled = true;
-        startBtn.textContent = 'Game Over';
-        startBtn.style.backgroundColor = '#7f8c8d';
-        startBtn.style.cursor = 'not-allowed';
-
     } else {
         gameMessageElement.textContent = '...';
     }
@@ -342,9 +329,14 @@ function gameLoop()
 {
     if (!gameRunning) return;
 
+
     clearCanvas();
     updateAllObjects();
     checkCollisions();
+    // Update powerups/effects (if any)
+    if (currentGameMode && currentGameMode.updatePowerups) {
+        currentGameMode.updatePowerups();
+    }
     updateGameStatus();
     drawAllObjects();
 
@@ -352,8 +344,13 @@ function gameLoop()
 }
 
 function updateStatsDisplay() {
-    totalBattlesElement.textContent = `Battles: ${gameStats.totalBattles}`;
-    gameTimeElement.textContent = `Time: ${gameStats.gameTime}s`;
+    if (currentGameMode) {
+        totalBattlesElement.textContent = `Battles: ${currentGameMode.getScore()}`;
+        gameTimeElement.textContent = `Time: ${currentGameMode.getTime()}s`;
+    } else {
+        totalBattlesElement.textContent = `Battles: 0`;
+        gameTimeElement.textContent = `Time: 0s`;
+    }
 }
 
 function updateAllObjects() 
@@ -417,27 +414,17 @@ function checkCollisions() {
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 
                 if (distance < obj1.radius + obj2.radius) {
-                    const winner = getRPSWinner(obj1.type, obj2.type);
-                    
-                    if (winner === obj1.type) {
-                        collisionSound.currentTime = 0;
-                        collisionSound.play().catch(() => {});
-
-                        gameStats.totalBattles++;
-                        obj1.winAnimation = 30;
+                    if (currentGameMode) {
+                        const winner = currentGameMode.onCollision(obj1, obj2);
                         
-                        if (!objectsToRemove.includes(idx2)) {
-                            objectsToRemove.push(idx2);
-                        }
-                    } else if (winner === obj2.type) {
-                        collisionSound.currentTime = 0;
-                        collisionSound.play().catch(() => {});
-
-                        gameStats.totalBattles++;
-                        obj2.winAnimation = 30;
-                        
-                        if (!objectsToRemove.includes(idx1)) {
-                            objectsToRemove.push(idx1);
+                        if (winner === obj1) {
+                            if (!objectsToRemove.includes(idx2)) {
+                                objectsToRemove.push(idx2);
+                            }
+                        } else if (winner === obj2) {
+                            if (!objectsToRemove.includes(idx1)) {
+                                objectsToRemove.push(idx1);
+                            }
                         }
                     }
                 }
@@ -529,6 +516,10 @@ function drawAllObjects() {
         
         ctx.restore();
     });
+    // Draw powerups/effects (if any)
+    if (currentGameMode && currentGameMode.drawPowerups) {
+        currentGameMode.drawPowerups(ctx);
+    }
 }
 
 function clearCanvas()
