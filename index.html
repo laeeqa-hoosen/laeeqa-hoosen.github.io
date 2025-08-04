@@ -7,13 +7,94 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="game-container">
+    <!-- Main Menu Screen -->
+    <div id="mainMenu" class="main-menu hidden">
+        <div class="menu-container">
+            <h1 class="menu-title">Rock Paper Scissors</h1>
+            <h2 class="menu-subtitle">Choose Your Game Mode</h2>
+            
+            <div class="game-modes-grid">
+                <!-- Available Modes -->
+                <div class="mode-card available" data-mode="classic">
+                    <div class="mode-icon">🎮</div>
+                    <h3>Classic Mode</h3>
+                    <p>The original RPS battle royale. Equal numbers of each type fight until one remains victorious.</p>
+                    <button class="play-btn">Play Now</button>
+                </div>
+                
+                <!-- Coming Soon Modes -->
+                <div class="mode-card coming-soon" data-mode="timed_battle">
+                    <div class="mode-icon">⏱️</div>
+                    <h3>Timed Battle</h3>
+                    <p>Continuous spawning for a set time. Most kills wins in this fast-paced challenge.</p>
+                    <div class="coming-soon-badge">Coming Soon</div>
+                </div>
+                
+                <div class="mode-card coming-soon" data-mode="prediction_mode">
+                    <div class="mode-icon">🔮</div>
+                    <h3>Prediction Mode</h3>
+                    <p>Predict the winner and score points for accuracy. Test your strategic foresight!</p>
+                    <div class="coming-soon-badge">Coming Soon</div>
+                </div>
+                
+                <div class="mode-card coming-soon" data-mode="survival_mode">
+                    <div class="mode-icon">🏃</div>
+                    <h3>Survival Mode</h3>
+                    <p>Control your character and survive as long as possible against endless waves.</p>
+                    <div class="coming-soon-badge">Coming Soon</div>
+                </div>
+                
+                <div class="mode-card coming-soon" data-mode="powerup_chaos">
+                    <div class="mode-icon">⚡</div>
+                    <h3>Powerup Chaos</h3>
+                    <p>Classic gameplay enhanced with game-changing power-ups and special abilities.</p>
+                    <div class="coming-soon-badge">Coming Soon</div>
+                </div>
+                
+                <div class="mode-card coming-soon" data-mode="king_of_the_hill">
+                    <div class="mode-icon">👑</div>
+                    <h3>King of the Hill</h3>
+                    <p>Control the center territory. Most objects in the zone wins the crown!</p>
+                    <div class="coming-soon-badge">Coming Soon</div>
+                </div>
+                
+                <div class="mode-card coming-soon" data-mode="elimination_tournament">
+                    <div class="mode-icon">🏆</div>
+                    <h3>Tournament</h3>
+                    <p>Single elimination bracket style. Best of 3 rounds determines the ultimate champion.</p>
+                    <div class="coming-soon-badge">Coming Soon</div>
+                </div>
+                
+                <div class="mode-card coming-soon" data-mode="infection_mode">
+                    <div class="mode-icon">🦠</div>
+                    <h3>Infection Mode</h3>
+                    <p>One type spreads like a virus, converting others. Can you contain the outbreak?</p>
+                    <div class="coming-soon-badge">Coming Soon</div>
+                </div>
+                
+                <div class="mode-card coming-soon" data-mode="resource_management">
+                    <div class="mode-icon">💎</div>
+                    <h3>Resource Management</h3>
+                    <p>Limited spawns require strategic thinking. Use your resources wisely to win.</p>
+                    <div class="coming-soon-badge">Coming Soon</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" class="game-container hidden">
+        <!-- Back to Menu button -->
+        <div class="back-container">
+            <button id="backToMenuBtn" class="back-btn">← Back to Menu</button>
+        </div>
+        
         <!-- Settings button in top-right corner -->
         <div class="settings-container">
             <button id="settingsToggle" class="settings-toggle">⚙️ Settings</button>
         </div>
         
-        <h1>Rock Paper Scissors Game</h1>
+        <h1 id="gameTitle">Rock Paper Scissors Game</h1>
 
         <div class="game-status">
             <div class="counts">
@@ -64,6 +145,7 @@
     
     <script src="src/gameMode.js"></script>
     <script src="src/modes/classicMode.js"></script>
+    <script src="src/gameModeManager.js"></script>
     <script src="src/game.js"></script>
 </body>
 </html>
