@@ -1,0 +1,76 @@
+game modes:
+  
+  timed_battle:
+    description: "Continuous spawn of each object for set time, most kills wins"
+    mechanics:
+      - Timer countdown (30s, 60s, 120s options)
+      - Equal spawn rate for all three types
+      - Kill counter for each type
+      - Winner announcement at end
+    
+  prediction_mode:
+    description: "Player predicts winner and scores points for correct predictions"
+    mechanics:
+      - Before each round, player picks rock/paper/scissors
+      - Points awarded based on accuracy
+      - Multiplier for consecutive correct predictions
+      - Leaderboard system
+    
+  survival_mode:
+    description: "Player controls one character, avoids others, survives as long as possible"
+    mechanics:
+      - Mouse controls player character
+      - Enemy objects spawn continuously
+      - Health system or one-hit elimination
+      - Power-ups for temporary invincibility/speed
+      - High score tracking
+    
+  powerup_chaos:
+    description: "Normal gameplay but with special power-ups"
+    mechanics:
+      - Speed boost power-ups
+      - Size change power-ups
+      - Temporary immunity
+      - Multiplication (split into multiple objects)
+      - Magnet (attracts specific types)
+
+  # Additional Ideas:
+  king_of_the_hill:
+    description: "Control territory by having most objects in center area"
+    mechanics:
+      - Highlighted center zone
+      - Points awarded for objects in zone
+      - Dynamic scoring over time
+      - Strategic spawning locations
+    
+  elimination_tournament:
+    description: "Single elimination bracket style"
+    mechanics:
+      - Start with equal numbers
+      - When one type is eliminated, it's out
+      - Last type standing wins
+      - Best of 3/5 rounds
+    
+  resource_management:
+    description: "Player has limited spawns, must use strategically"
+    mechanics:
+      - Limited spawn budget for each type
+      - Must decide when/where to spawn
+      - Resource regeneration over time
+      - Strategic depth
+    
+  infection_mode:
+    description: "One type tries to convert all others"
+    mechanics:
+      - Start with mostly one type, few of another
+      - Converted objects change type instead of disappearing
+      - Race against time to convert all
+      - Can switch which type is the "virus"
+    
+  gravity_wells:
+    description: "Special zones that affect object movement"
+    mechanics:
+      - Gravity wells that attract objects
+      - Repulsion zones that push objects away
+      - Moving/rotating gravity effects
+      - Strategic well placement
