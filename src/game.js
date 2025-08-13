@@ -41,15 +41,11 @@ rockImage.onload = function() {
     console.log('Rock image loaded successfully!');
     imagesLoaded++;
     console.log(`Images loaded progress: ${imagesLoaded}/${totalImages}`);
-    updateLoadingScreen();
-    checkAllImagesLoaded();
 };
 rockImage.onerror = function() {
     console.log('Failed to load rock image - will use red circle instead');
     imagesLoaded++;
     console.log(`Images loaded progress: ${imagesLoaded}/${totalImages}`);
-    updateLoadingScreen();
-    checkAllImagesLoaded();
 };
 
 const scissorsImage = new Image();
@@ -58,15 +54,11 @@ scissorsImage.onload = function() {
     console.log('Scissors image loaded successfully!');
     imagesLoaded++;
     console.log(`Images loaded progress: ${imagesLoaded}/${totalImages}`);
-    updateLoadingScreen();
-    checkAllImagesLoaded();
 };
 scissorsImage.onerror = function() {
     console.log('Failed to load scissors image - will use yellow circle instead');
     imagesLoaded++;
     console.log(`Images loaded progress: ${imagesLoaded}/${totalImages}`);
-    updateLoadingScreen();
-    checkAllImagesLoaded();
 };
 
 const paperImage = new Image();
@@ -75,15 +67,11 @@ paperImage.onload = function() {
     console.log('Paper image loaded successfully!');
     imagesLoaded++;
     console.log(`Images loaded progress: ${imagesLoaded}/${totalImages}`);
-    updateLoadingScreen();
-    checkAllImagesLoaded();
 };
 paperImage.onerror = function() {
     console.log('Failed to load paper image - will use blue circle instead');
     imagesLoaded++;
     console.log(`Images loaded progress: ${imagesLoaded}/${totalImages}`);
-    updateLoadingScreen();
-    checkAllImagesLoaded();
 };
 
 const totalBattlesElement = document.querySelector('.total-battles');
@@ -138,117 +126,6 @@ settingsToggle.addEventListener('click', () => {
         settingsToggle.textContent = '⚙️ Hide Settings';
     }
 });
-
-function checkAllImagesLoaded() {
-    console.log(`Images loaded: ${imagesLoaded}/${totalImages}`);
-    if (imagesLoaded >= totalImages) {
-        console.log('All images loaded successfully! Transitioning to main menu...');
-        
-        // Ensure DOM is ready before proceeding
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', showMainMenu);
-        } else {
-            showMainMenu();
-        }
-    }
-}
-
-function showMainMenu() {
-    console.log('showMainMenu called');
-    
-    // Remove loading screen and show main menu
-    setTimeout(() => {
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        if (loadingOverlay) {
-            console.log('Removing loading overlay');
-            document.body.removeChild(loadingOverlay);
-        } else {
-            console.log('Loading overlay not found');
-        }
-        
-        const mainMenu = document.getElementById('mainMenu');
-        if (mainMenu) {
-            console.log('Showing main menu');
-            mainMenu.classList.remove('hidden');
-        } else {
-            console.log('Main menu element not found');
-            // Try to find it by creating a fallback
-            console.log('Available elements:', document.querySelectorAll('div').length);
-        }
-    }, 500);
-}
-
-// Show loading screen initially
-function showLoadingScreen() {
-    console.log('showLoadingScreen called');
-    
-    // Hide both menu and game initially
-    const mainMenu = document.getElementById('mainMenu');
-    const gameScreen = document.getElementById('gameScreen');
-    
-    if (mainMenu) {
-        mainMenu.classList.add('hidden');
-        console.log('Main menu hidden');
-    }
-    if (gameScreen) {
-        gameScreen.classList.add('hidden');
-        console.log('Game screen hidden');
-    }
-    
-    // Create loading overlay
-    const loadingOverlay = document.createElement('div');
-    loadingOverlay.id = 'loadingOverlay';
-    loadingOverlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: #2c3e50;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        z-index: 9999;
-        color: white;
-        font-family: Arial, sans-serif;
-    `;
-    
-    loadingOverlay.innerHTML = `
-        <h2 style="font-size: 2.5rem; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Loading Game Assets...</h2>
-        <div id="loadingProgress" style="font-size: 1.2rem; color: #bdc3c7;">${imagesLoaded}/${totalImages} images loaded</div>
-        <div style="width: 200px; height: 4px; background-color: #34495e; border-radius: 2px; margin-top: 20px; overflow: hidden;">
-            <div id="progressBar" style="width: ${(imagesLoaded/totalImages)*100}%; height: 100%; background: linear-gradient(45deg, #3498db, #2980b9); transition: width 0.3s ease;"></div>
-        </div>
-    `;
-    
-    document.body.appendChild(loadingOverlay);
-    console.log('Loading overlay added to DOM');
-}
-
-// Call loading screen initially
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, showing loading screen');
-    showLoadingScreen();
-    
-    // Also check if images are already loaded by this point
-    if (imagesLoaded >= totalImages) {
-        checkAllImagesLoaded();
-    }
-});
-
-function updateLoadingScreen() {
-    const progressText = document.getElementById('loadingProgress');
-    const progressBar = document.getElementById('progressBar');
-    
-    if (progressText) {
-        progressText.textContent = `${imagesLoaded}/${totalImages} images loaded`;
-    }
-    
-    if (progressBar) {
-        progressBar.style.width = `${(imagesLoaded/totalImages)*100}%`;
-    }
-}
 
 
 function setGameSpeed(speed, activeBtn) {
@@ -678,6 +555,3 @@ document.addEventListener('keydown', (event) => {
             break;
     }
 });
-
-// Show loading screen initially
-showLoadingScreen();

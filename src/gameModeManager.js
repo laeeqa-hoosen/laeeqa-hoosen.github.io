@@ -1,11 +1,19 @@
 // Game Mode Manager - handles switching between different game modes
+console.log('[GameModeManager.js] Script loaded');
 class GameModeManager {
     constructor() {
+        // Check if ClassicMode and GameMode are defined
+        if (typeof ClassicMode === 'undefined') {
+            console.error('ClassicMode is not defined! Check script order in index.html.');
+        }
+        if (typeof GameMode === 'undefined') {
+            console.error('GameMode is not defined! Check script order in index.html.');
+        }
         this.availableModes = {
             classic: {
                 name: 'Classic Mode',
-                class: ClassicMode,
-                available: true,
+                class: (typeof ClassicMode !== 'undefined') ? ClassicMode : null,
+                available: (typeof ClassicMode !== 'undefined'),
                 description: 'The original RPS battle royale'
             },
             timed_battle: {
@@ -64,25 +72,36 @@ class GameModeManager {
     
     setupEventListeners() {
         // Main menu mode selection
-        document.addEventListener('DOMContentLoaded', () => {
+        // Show main menu directly when DOM loads and attach event listeners
+        const attachMenuListeners = () => {
+            console.log('[GameModeManager.js] Attaching menu listeners');
             const modeCards = document.querySelectorAll('.mode-card.available');
-            modeCards.forEach(card => {
+            console.log(`[GameModeManager.js] Found ${modeCards.length} available mode cards`);
+            
+            modeCards.forEach((card, index) => {
+                console.log(`[GameModeManager.js] Setting up listeners for card ${index}: ${card.dataset.mode}`);
+                
                 card.addEventListener('click', (e) => {
                     const modeId = card.dataset.mode;
+                    console.log(`[MainMenu] Card clicked: ${modeId}`);
                     this.selectMode(modeId);
                 });
-                
+
                 // Also handle the play button click specifically
                 const playBtn = card.querySelector('.play-btn');
                 if (playBtn) {
+                    console.log(`[GameModeManager.js] Found play button for ${card.dataset.mode}`);
                     playBtn.addEventListener('click', (e) => {
                         e.stopPropagation(); // Prevent double triggering
                         const modeId = card.dataset.mode;
+                        console.log(`[MainMenu] Play button clicked: ${modeId}`);
                         this.selectMode(modeId);
                     });
+                } else {
+                    console.log(`[GameModeManager.js] No play button found for ${card.dataset.mode}`);
                 }
             });
-            
+
             // Back to menu button
             const backBtn = document.getElementById('backToMenuBtn');
             if (backBtn) {
@@ -90,35 +109,60 @@ class GameModeManager {
                     this.showMainMenu();
                 });
             }
+        };
+
+        const showMenuWithLog = () => {
+            const mainMenu = document.getElementById('mainMenu');
+            if (mainMenu) {
+                mainMenu.classList.remove('hidden');
+                console.log('[GameModeManager.js] Main menu displayed');
+                attachMenuListeners();
+            } else {
+                console.error('[GameModeManager.js] Main menu element not found');
+            }
+        };
+
+        // If DOM is already loaded, show menu immediately
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            console.log('[GameModeManager.js] DOM already loaded, showing menu immediately');
+            showMenuWithLog();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('[GameModeManager.js] DOMContentLoaded event fired');
+            showMenuWithLog();
         });
     }
     
     selectMode(modeId) {
         const modeInfo = this.availableModes[modeId];
-        
+
+        console.log(`[GameModeManager] selectMode called with: ${modeId}`);
+
         if (!modeInfo) {
             console.error(`Unknown mode: ${modeId}`);
             return;
         }
-        
+
         if (!modeInfo.available) {
             alert(`${modeInfo.name} is coming soon!`);
             return;
         }
-        
+
         // Create the mode instance
         if (modeInfo.class) {
+            console.log(`[GameModeManager] Instantiating mode: ${modeInfo.name}`);
             this.currentMode = new modeInfo.class();
-            
+
             // Update the game title
             const gameTitle = document.getElementById('gameTitle');
             if (gameTitle) {
                 gameTitle.textContent = modeInfo.name;
             }
-            
+
             // Switch to game screen
             this.showGameScreen();
-            
+
             // Initialize the game with the new mode
             this.initializeGameWithMode();
         }
