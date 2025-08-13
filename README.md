@@ -1,10 +1,21 @@
 # Rock Paper Scissors Bouncer
 
-A visual rock-paper-scissors game inspired by the classic DVD screensaver bouncing effect.
+An interactive rock-paper-scissors battle royale with multiple game modes, inspired by the classic DVD screensaver bouncing effect.
 
-## Game Concept
+## Game Features
 
-Rock, paper, and scissors icons bounce around the screen randomly like the classic DVD logo. When two icons collide, the classic rock-paper-scissors rules apply - the winner survives and the loser is destroyed.
+### Available Game Modes
+- **Classic Mode** - The original RPS battle royale. Equal numbers of each type fight until one remains victorious.
+
+### Coming Soon Game Modes
+- **Timed Battle** - Continuous spawning for a set time. Most kills wins in this fast-paced challenge.
+- **Prediction Mode** - Predict the winner and score points for accuracy. Test your strategic foresight!
+- **Survival Mode** - Control your character and survive as long as possible against endless waves.
+- **Powerup Chaos** - Classic gameplay enhanced with game-changing power-ups and special abilities.
+- **King of the Hill** - Control the center territory. Most objects in the zone wins the crown!
+- **Tournament** - Single elimination bracket style. Best of 3 rounds determines the ultimate champion.
+- **Infection Mode** - One type spreads like a virus, converting others. Can you contain the outbreak?
+- **Resource Management** - Limited spawns require strategic thinking. Use your resources wisely to win.
 
 ## Game Rules
 
@@ -14,7 +25,7 @@ Rock, paper, and scissors icons bounce around the screen randomly like the class
 - **Scissors** beats **Paper** (scissors cut paper)
 - Same type collisions result in both icons surviving
 
-### Gameplay Mechanics
+### Classic Mode Mechanics
 - Icons bounce around the screen at random speeds and directions
 - Icons bounce off screen edges (like a screensaver)
 - When two icons touch/collide, the stronger one wins based on RPS rules
@@ -22,12 +33,24 @@ Rock, paper, and scissors icons bounce around the screen randomly like the class
 - The winning icon continues bouncing
 - Game continues until only one type remains or all icons are gone
 
+### Game Controls
+- **Start/Pause** - Control the game flow
+- **Reset** - Start a fresh round
+- **Speed Controls** - Adjust game speed (Slow, Normal, Fast, Ultra, Ludicrous)
+- **Manual Spawning** - Add individual rocks, papers, or scissors
+- **Starting Count** - Configure how many of each type to start with (1-10)
+
 ## Technical Features
 - HTML5 Canvas for rendering
 - Smooth animation and physics
 - Collision detection between moving objects
 - Dynamic icon spawning and removal
 - Responsive design
+- Modular game mode system
+- Custom UI for each game mode
+- State management and game persistence
 
-## Goal
-The goal is to create an entertaining visualization of rock-paper-scissors where you can watch the battle play out automatically, similar to watching a screensaver but with game logic applied to collisions.
+## Development Status
+- Classic Mode fully implemented
+- Additional game modes in development
+- Regular updates and new features planned
