@@ -1,24 +1,24 @@
-html, body, * {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-button {
-  outline: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-button:focus {
-  outline: none;
-  box-shadow: none;
-}
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+input {
+    user-select: auto;
+    -webkit-user-select: auto;
+}
+
+/* Hide focus rings for mouse clicks but keep them for keyboard navigation */
+button:focus {
+    outline: none;
+}
+
+button:focus-visible {
+    outline: 2px solid #f1c40f;
+    outline-offset: 2px;
 }
 
 body {
@@ -175,7 +175,6 @@ body {
 
 .back-btn {
     background-color: #e74c3c;
-    border-color: #c0392b;
     font-size: 16px;
     padding: 12px 20px;
     border-radius: 8px;
@@ -189,6 +188,8 @@ body {
 
 /* Game Container Styles */
 .game-container {
+    width: 100%;
+    max-width: 1264px;
     text-align: center;
     background-color: #34495e;
     padding: 30px;
@@ -199,15 +200,17 @@ body {
 h1 {
     margin-bottom: 20px;
     color: #ecf0f1;
-    font-size: 3.2em; /* Increased from 2.5em */
+    font-size: 3.2em;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+/* Scale down to fit both the container width and the viewport height, keeping the 3:2 ratio */
 #gameCanvas {
-    width: 1200px;
-    height: 800px;
-    border: 2px solid #34495e;
-    background-color: #2c3e50;
+    display: block;
+    width: min(100%, max(480px, calc((100vh - 360px) * 1.5)));
+    height: auto;
+    margin: 0 auto 15px;
+    border: 2px solid #2c3e50;
 }
 
 .controls {
@@ -239,7 +242,7 @@ h1 {
     font-weight: bold;
     color: #ecf0f1;
     margin-right: 5px;
-    font-size: 18px; /* Add this - was default 16px */
+    font-size: 18px;
 }
 
 .speed-btn,
@@ -247,8 +250,8 @@ h1 {
     background-color: #34495e;
     color: white;
     border: 2px solid #3498db;
-    padding: 10px 18px; /* Increased padding */
-    font-size: 16px; /* Increased from 14px */
+    padding: 10px 18px;
+    font-size: 16px;
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -297,8 +300,8 @@ button {
     background-color: #3498db;
     color: white;
     border: none;
-    padding: 15px 30px; /* Increased from 12px 25px */
-    font-size: 18px; /* Increased from 16px */
+    padding: 15px 30px;
+    font-size: 18px;
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s ease;
@@ -312,6 +315,12 @@ button:active {
     transform: translateY(2px);
 }
 
+#startBtn:disabled {
+    background-color: #7f8c8d;
+    cursor: not-allowed;
+    transform: none;
+}
+
 .game-status {
     margin-bottom: 15px;
 }
@@ -320,7 +329,7 @@ button:active {
     display: flex;
     justify-content: space-around;
     margin-bottom: 10px;
-    font-size: 22px; /* Increased from 18px */
+    font-size: 22px;
     font-weight: bold;
 }
 
@@ -337,7 +346,7 @@ button:active {
 }
 
 .game-message {
-    font-size: 24px; /* Increased from 20px */
+    font-size: 24px;
     font-weight: bold;
     min-height: 25px;
     color: #2ecc71;
@@ -348,19 +357,81 @@ button:active {
     display: flex;
     justify-content: space-around;
     margin: 10px 0;
-    font-size: 18px; /* Increased from 16px */
+    font-size: 18px;
     color: #bdc3c7;
     background-color: rgba(52, 73, 94, 0.8);
-    padding: 10px; /* Increased padding from 8px */
+    padding: 10px;
     border-radius: 5px;
-    font-weight: bold; /* Add this to make it more prominent */
+    font-weight: bold;
+}
+
+/* Prediction Mode panel */
+.prediction-panel {
+    margin-bottom: 15px;
+}
+
+.prediction-picker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.prediction-picker label {
+    font-weight: bold;
+    color: #ecf0f1;
+    font-size: 18px;
+    margin-right: 5px;
+}
+
+.prediction-btn {
+    background-color: #34495e;
+    border: 2px solid var(--type-color);
+    padding: 8px 18px;
+    font-size: 16px;
+    border-radius: 6px;
+}
+
+.prediction-btn[data-type="Rock"] { --type-color: #e74c3c; }
+.prediction-btn[data-type="Paper"] { --type-color: #3498db; }
+.prediction-btn[data-type="Scissors"] { --type-color: #f1c40f; }
+
+.prediction-btn:hover:not(:disabled),
+.prediction-btn.selected {
+    background-color: var(--type-color);
+}
+
+.prediction-btn[data-type="Scissors"].selected,
+.prediction-btn[data-type="Scissors"]:hover:not(:disabled) {
+    color: #2c3e50;
+}
+
+.prediction-btn:disabled {
+    cursor: not-allowed;
+    transform: none;
+}
+
+.prediction-btn:disabled:not(.selected) {
+    background-color: #34495e;
+    opacity: 0.4;
+}
+
+.prediction-status {
+    font-size: 16px;
+    color: #ecf0f1;
+    margin-bottom: 4px;
+}
+
+.prediction-stats {
+    font-size: 16px;
+    color: #bdc3c7;
 }
 
 .settings-toggle {
     background-color: #95a5a6;
-    border-color: #7f8c8d;
-    font-size: 18px; /* Increased from 16px */
-    padding: 15px 25px; /* Increased from 12px 20px */
+    font-size: 18px;
+    padding: 15px 25px;
 }
 
 .settings-toggle:hover {
@@ -382,24 +453,21 @@ button:active {
     transition: all 0.3s ease;
     overflow: hidden;
     position: absolute;
-    top: 70px;
-    right: 0;
+    top: 85px;
+    right: 20px;
     min-width: 250px;
+    max-height: 600px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
-.settings-panel.hidden {
+/* Not .hidden: display:none would skip the collapse transition */
+.settings-panel.collapsed {
     max-height: 0;
     padding: 0 20px;
     border-width: 0;
     opacity: 0;
     transform: translateY(-10px);
-}
-
-.settings-panel:not(.hidden) {
-    max-height: 400px;
-    opacity: 1;
-    transform: translateY(0);
+    visibility: hidden;
 }
 
 .settings-panel .speed-controls,

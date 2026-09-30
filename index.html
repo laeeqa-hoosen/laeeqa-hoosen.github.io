@@ -22,18 +22,25 @@
                     <button class="play-btn">Play Now</button>
                 </div>
                 
+                <div class="mode-card available" data-mode="infection_mode">
+                    <div class="mode-icon">🦠</div>
+                    <h3>Infection Mode</h3>
+                    <p>Losers don't die, they get infected. One type spreads like a virus until it has converted everyone.</p>
+                    <button class="play-btn">Play Now</button>
+                </div>
+                
+                <div class="mode-card available" data-mode="prediction_mode">
+                    <div class="mode-icon">🔮</div>
+                    <h3>Prediction Mode</h3>
+                    <p>Predict the winner and score points for accuracy. Test your strategic foresight!</p>
+                    <button class="play-btn">Play Now</button>
+                </div>
+                
                 <!-- Coming Soon Modes -->
                 <div class="mode-card coming-soon" data-mode="timed_battle">
                     <div class="mode-icon">⏱️</div>
                     <h3>Timed Battle</h3>
                     <p>Continuous spawning for a set time. Most kills wins in this fast-paced challenge.</p>
-                    <div class="coming-soon-badge">Coming Soon</div>
-                </div>
-                
-                <div class="mode-card coming-soon" data-mode="prediction_mode">
-                    <div class="mode-icon">🔮</div>
-                    <h3>Prediction Mode</h3>
-                    <p>Predict the winner and score points for accuracy. Test your strategic foresight!</p>
                     <div class="coming-soon-badge">Coming Soon</div>
                 </div>
                 
@@ -65,13 +72,6 @@
                     <div class="coming-soon-badge">Coming Soon</div>
                 </div>
                 
-                <div class="mode-card coming-soon" data-mode="infection_mode">
-                    <div class="mode-icon">🦠</div>
-                    <h3>Infection Mode</h3>
-                    <p>One type spreads like a virus, converting others. Can you contain the outbreak?</p>
-                    <div class="coming-soon-badge">Coming Soon</div>
-                </div>
-                
                 <div class="mode-card coming-soon" data-mode="resource_management">
                     <div class="mode-icon">💎</div>
                     <h3>Resource Management</h3>
@@ -98,8 +98,8 @@
 
         <div class="game-status">
             <div class="counts">
-                <span class="rock-count">Rocks: 3</span>
-                <span class="paper-count">Papers: 3</span>
+                <span class="rock-count">Rock: 3</span>
+                <span class="paper-count">Paper: 3</span>
                 <span class="scissors-count">Scissors: 3</span>
             </div>
             <div class="stats">
@@ -117,7 +117,7 @@
                 <button id="resetBtn">Reset</button>
             </div>
             
-            <div id="settingsPanel" class="settings-panel hidden">
+            <div id="settingsPanel" class="settings-panel collapsed">
                 <div class="speed-controls">
                     <label>Speed:</label>
                     <button id="slowBtn" class="speed-btn">Slow</button>
@@ -145,6 +145,8 @@
     
     <script src="src/gameMode.js"></script>
     <script src="src/modes/classicMode.js"></script>
+    <script src="src/modes/infectionMode.js"></script>
+    <script src="src/modes/predictionMode.js"></script>
     <script src="src/gameModeManager.js"></script>
     <script src="src/game.js"></script>
 </body>

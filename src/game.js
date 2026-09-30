@@ -5,74 +5,47 @@ const ctx = canvas.getContext('2d');
 canvas.width = 1200;
 canvas.height = 800;
 
+// Speeds and animation lengths are in 60fps frames; movement is scaled by real frame time
+const FRAME_MS = 1000 / 60;
+const MAX_FRAME_MS = 50;
+const MAX_TIMER_GAP_MS = 1000;
+const OBJECT_RADIUS = 30;
+const WIN_ANIMATION_FRAMES = 30;
+const SPAWN_MARGIN = 50;
+
 // Game Mode System
 let currentGameMode = null;
 
 let gameRunning = false;
 let animationId;
+let lastFrameTime = null;
 
 let rpsObjects = [];
-let flashEffects = [];
-let powerups = []; // Array for powerup/effect objects
 
 let gameSpeed = 1;
 let startingCount = 3;
-let imagesLoaded = 0;
-let totalImages = 3; // rock, scissors, and paper
 
 let gameStats =
 {
     totalBattles: 0,
-    gameStartTime: 0,
-    gameTime: 0
+    elapsedMs: 0
 };
 
 const RPS_TYPES =
 {
-    Rock: {color: 'green', letter: 'R'},
-    Paper: {color: 'blue', letter: 'P'},
-    Scissors: {color: 'red', letter: 'S'}
+    Rock: {color: '#e74c3c', letter: 'R', image: './assets/rock.png'},
+    Paper: {color: '#3498db', letter: 'P', image: './assets/paper.png'},
+    Scissors: {color: '#f1c40f', letter: 'S', image: './assets/scissors.png'}
 };
 
-// Load rock and scissors images
-const rockImage = new Image();
-rockImage.src = './assets/rock.png';
-rockImage.onload = function() {
-    console.log('Rock image loaded successfully!');
-    imagesLoaded++;
-    console.log(`Images loaded progress: ${imagesLoaded}/${totalImages}`);
-};
-rockImage.onerror = function() {
-    console.log('Failed to load rock image - will use red circle instead');
-    imagesLoaded++;
-    console.log(`Images loaded progress: ${imagesLoaded}/${totalImages}`);
-};
-
-const scissorsImage = new Image();
-scissorsImage.src = './assets/scissors.png';
-scissorsImage.onload = function() {
-    console.log('Scissors image loaded successfully!');
-    imagesLoaded++;
-    console.log(`Images loaded progress: ${imagesLoaded}/${totalImages}`);
-};
-scissorsImage.onerror = function() {
-    console.log('Failed to load scissors image - will use yellow circle instead');
-    imagesLoaded++;
-    console.log(`Images loaded progress: ${imagesLoaded}/${totalImages}`);
-};
-
-const paperImage = new Image();
-paperImage.src = './assets/paper.png';
-paperImage.onload = function() {
-    console.log('Paper image loaded successfully!');
-    imagesLoaded++;
-    console.log(`Images loaded progress: ${imagesLoaded}/${totalImages}`);
-};
-paperImage.onerror = function() {
-    console.log('Failed to load paper image - will use blue circle instead');
-    imagesLoaded++;
-    console.log(`Images loaded progress: ${imagesLoaded}/${totalImages}`);
-};
+// Objects fall back to a coloured circle if their image fails to load
+const rpsImages = {};
+Object.entries(RPS_TYPES).forEach(([type, { image }]) => {
+    const img = new Image();
+    img.src = image;
+    img.onerror = () => console.warn(`Failed to load ${image} - drawing ${type} as a circle instead`);
+    rpsImages[type] = img;
+});
 
 const totalBattlesElement = document.querySelector('.total-battles');
 const gameTimeElement = document.querySelector('.game-time');
@@ -117,10 +90,10 @@ spawnScissorsBtn.addEventListener('click', () => spawnObject('Scissors'));
 applyCountBtn.addEventListener('click', applyStartingCount);
 
 settingsToggle.addEventListener('click', () => {
-    settingsPanel.classList.toggle('hidden');
+    settingsPanel.classList.toggle('collapsed');
     
     // Update button text
-    if (settingsPanel.classList.contains('hidden')) {
+    if (settingsPanel.classList.contains('collapsed')) {
         settingsToggle.textContent = '⚙️ Settings';
     } else {
         settingsToggle.textContent = '⚙️ Hide Settings';
@@ -143,38 +116,39 @@ function setGameSpeed(speed, activeBtn) {
 }
 
 function applyStartingCount() {
-    const newCount = parseInt(startCountInput.value);
+    const newCount = parseInt(startCountInput.value, 10);
     if (newCount >= 1 && newCount <= 10) {
         startingCount = newCount;
         resetGame(); // Restart with new count
+    } else {
+        startCountInput.value = startingCount;
     }
 }
 
 
 function spawnObject(type) {
-    const counts = { Rock: 0, Paper: 0, Scissors: 0 };
-    rpsObjects.forEach(obj => counts[obj.type]++);
-    const typesRemaining = Object.values(counts).filter(count => count > 0).length;
-    if (typesRemaining <= 1) {
+    if (!currentGameMode || !currentGameMode.canSpawn() || currentGameMode.checkGameEnd()) {
         return;
     }
-    let x, y, attempts = 0;
-    do {
-        x = Math.random() * (canvas.width - 100) + 50;
-        y = Math.random() * (canvas.height - 100) + 50;
-        attempts++;
-    } while (attempts < 50 && isPositionOccupied(x, y));
+    const { x, y } = findFreePosition();
     const newObject = createRPSObject(type, x, y);
-    newObject.speedX *= gameSpeed;
-    newObject.speedY *= gameSpeed;
     rpsObjects.push(newObject);
-    // Allow mode to react to spawns
-    if (currentGameMode && currentGameMode.onSpawn) currentGameMode.onSpawn(type, newObject);
+    currentGameMode.onSpawn(newObject);
+
+    if (!gameRunning) {
+        updateGameStatus();
+        render();
+    }
 }
 
-// Batch spawn for modes that want to spawn multiple at once
-function spawnObjects(types) {
-    types.forEach(type => spawnObject(type));
+function findFreePosition() {
+    let x, y, attempts = 0;
+    do {
+        x = Math.random() * (canvas.width - SPAWN_MARGIN * 2) + SPAWN_MARGIN;
+        y = Math.random() * (canvas.height - SPAWN_MARGIN * 2) + SPAWN_MARGIN;
+        attempts++;
+    } while (attempts < 50 && isPositionOccupied(x, y));
+    return { x, y };
 }
 
 function isPositionOccupied(x, y) {
@@ -182,99 +156,86 @@ function isPositionOccupied(x, y) {
         const dx = obj.x - x;
         const dy = obj.y - y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        return distance < (obj.radius + 25 + 10);
+        return distance < (obj.radius + OBJECT_RADIUS + 10);
     });
 }
 
 function createRPSObject(type, x, y)
 {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = (1.5 + Math.random() * 1.5) * gameSpeed;
     return {
-        x:x,
-        y:y,
-        radius: 30,
-        baseRadius: 30, 
-        speedX: (Math.random() - 0.5) * 6 * gameSpeed,
-        speedY: (Math.random() - 0.5) * 6 * gameSpeed,
+        x: x,
+        y: y,
+        radius: OBJECT_RADIUS,
+        baseRadius: OBJECT_RADIUS,
+        speedX: Math.cos(angle) * speed,
+        speedY: Math.sin(angle) * speed,
         type: type,
         color: RPS_TYPES[type].color,
-        baseColor: RPS_TYPES[type].color,
         letter: RPS_TYPES[type].letter,
         winAnimation: 0,
         pulseIntensity: 0 
     };
 }
 
-function createFlashEffect(x, y) {
-    return {
-        x: x,
-        y: y,
-        radius: 10,
-        maxRadius: 50,
-        opacity: 1,
-        duration: 20
-    };
+function countTypes() {
+    const counts = { Rock: 0, Paper: 0, Scissors: 0 };
+    rpsObjects.forEach(obj => {
+        counts[obj.type]++;
+    });
+    return counts;
 }
 
-function initializeGame()
-{
-    if (currentGameMode) {
-        currentGameMode.init();
-    }
+function resetGameStats() {
+    gameStats.totalBattles = 0;
+    gameStats.elapsedMs = 0;
 }
 
 function startGame() 
 {
-    if (!gameRunning) {
-        gameRunning = true;
-        startBtn.textContent = 'Pause';
-        if (gameStats.gameStartTime === 0) {
-            gameStats.gameStartTime = Date.now();
-        }
-        gameLoop();
-    } else {
-        pauseGame();    
+    if (!currentGameMode || startBtn.disabled) {
+        return;
     }
+    if (gameRunning) {
+        pauseGame();
+        return;
+    }
+    if (!currentGameMode.canStart()) {
+        return;
+    }
+    gameRunning = true;
+    startBtn.textContent = 'Pause';
+    lastFrameTime = null;
+    animationId = requestAnimationFrame(gameLoop);
 }
 
 function pauseGame() 
 {
     gameRunning = false;
-    startBtn.textContent = 'Start Game';
+    startBtn.textContent = 'Start';
     cancelAnimationFrame(animationId);
 }
 
 function resetGame() 
 {
     pauseGame();
-
-    // Remove any mode-specific UI
-    if (currentGameMode && currentGameMode.removeUI) currentGameMode.removeUI();
-
     startBtn.disabled = false;
-    startBtn.textContent = 'Start';
-    startBtn.style.backgroundColor = '#3498db';
-    startBtn.style.cursor = 'pointer';
+    resetGameStats();
 
     if (currentGameMode) {
+        currentGameMode.removeUI();
         currentGameMode.reset();
-        if (currentGameMode.createUI) currentGameMode.createUI();
+        currentGameMode.createUI();
+        currentGameMode.init();
     }
-    initializeGame();
     updateGameStatus();
-    clearCanvas();
-    drawAllObjects();
+    render();
 }
 
 function updateGameStatus()
 {
-    if (gameRunning && currentGameMode && currentGameMode.updateTimer) {
-        currentGameMode.updateTimer();
-    }
-
-    const counts = {Rock: 0, Paper: 0, Scissors: 0};
-    rpsObjects.forEach(obj => {
-        counts[obj.type]++;
-    });
+    const counts = countTypes();
 
     rockCountElement.textContent = `Rock: ${counts.Rock}`;
     paperCountElement.textContent = `Paper: ${counts.Paper}`;
@@ -282,39 +243,46 @@ function updateGameStatus()
 
     updateStatsDisplay();
 
+    if (!currentGameMode) {
+        return;
+    }
+
     // Allow mode to update its own UI
-    if (currentGameMode && currentGameMode.updateUI) currentGameMode.updateUI();
+    currentGameMode.updateUI();
 
     // Check game end condition using current game mode
-    if (currentGameMode && currentGameMode.checkGameEnd()) {
+    if (currentGameMode.checkGameEnd()) {
         gameMessageElement.textContent = currentGameMode.getGameEndMessage();
         pauseGame();
 
         startBtn.disabled = true;
         startBtn.textContent = 'Game Over';
-        startBtn.style.backgroundColor = '#7f8c8d';
-        startBtn.style.cursor = 'not-allowed';
     } else {
         gameMessageElement.textContent = '...';
     }
 }
 
-function gameLoop() 
+function gameLoop(timestamp) 
 {
     if (!gameRunning) return;
 
+    // Physics steps are capped so a slow frame can't teleport objects through each other;
+    // the timer is only capped to ignore long gaps like a backgrounded tab
+    const frameMs = lastFrameTime === null ? 0 : timestamp - lastFrameTime;
+    const stepMs = Math.min(frameMs, MAX_FRAME_MS);
+    lastFrameTime = timestamp;
 
-    clearCanvas();
-    updateAllObjects();
+    updateAllObjects(stepMs / FRAME_MS);
     checkCollisions();
-    // Update powerups/effects (if any)
-    if (currentGameMode && currentGameMode.updatePowerups) {
-        currentGameMode.updatePowerups();
-    }
+    currentGameMode.update(stepMs);
+    currentGameMode.updatePowerups(stepMs);
+    currentGameMode.updateTimer(Math.min(frameMs, MAX_TIMER_GAP_MS));
     updateGameStatus();
-    drawAllObjects();
+    render();
 
-    animationId = requestAnimationFrame(gameLoop);
+    if (gameRunning) {
+        animationId = requestAnimationFrame(gameLoop);
+    }
 }
 
 function updateStatsDisplay() {
@@ -327,16 +295,16 @@ function updateStatsDisplay() {
     }
 }
 
-function updateAllObjects() 
+function updateAllObjects(step) 
 {
     rpsObjects.forEach(obj => {
-        obj.x += obj.speedX;
-        obj.y += obj.speedY;
+        obj.x += obj.speedX * step;
+        obj.y += obj.speedY * step;
 
         if (obj.winAnimation > 0) {
-            obj.winAnimation--;
+            obj.winAnimation = Math.max(0, obj.winAnimation - step);
             
-            const progress = 1 - (obj.winAnimation / 30);
+            const progress = 1 - (obj.winAnimation / WIN_ANIMATION_FRAMES);
             obj.radius = obj.baseRadius + Math.sin(progress * Math.PI) * 8;
      
             obj.pulseIntensity = Math.sin(progress * Math.PI * 4) * 0.5 + 0.5;
@@ -345,99 +313,54 @@ function updateAllObjects()
             obj.pulseIntensity = 0;
         }
 
-        if  (obj.x + obj.radius >= canvas.width || obj.x - obj.radius <= 0) {
-            obj.speedX = -obj.speedX;
+        // Clamp to the wall so an object that overshoots can't flip direction every frame
+        if (obj.x - obj.radius < 0) {
+            obj.x = obj.radius;
+            obj.speedX = Math.abs(obj.speedX);
+        } else if (obj.x + obj.radius > canvas.width) {
+            obj.x = canvas.width - obj.radius;
+            obj.speedX = -Math.abs(obj.speedX);
         }
     
-        if (obj.y + obj.radius >= canvas.height || obj.y - obj.radius <= 0) {
-            obj.speedY = -obj.speedY;
+        if (obj.y - obj.radius < 0) {
+            obj.y = obj.radius;
+            obj.speedY = Math.abs(obj.speedY);
+        } else if (obj.y + obj.radius > canvas.height) {
+            obj.y = canvas.height - obj.radius;
+            obj.speedY = -Math.abs(obj.speedY);
         }
-    });
-}
-
-function updateFlashEffects() {
-    flashEffects = flashEffects.filter(flash => {
-        flash.radius += (flash.maxRadius - flash.radius) * 0.3;
-        flash.opacity -= 1 / flash.duration;
-        return flash.opacity > 0;
     });
 }
 
 function checkCollisions() {
-    const objectsToRemove = [];
-    const gridSize = 100;
-    const grid = new Map();
-    
-    rpsObjects.forEach((obj, index) => {
-        const gridX = Math.floor(obj.x / gridSize);
-        const gridY = Math.floor(obj.y / gridSize);
-        const key = `${gridX},${gridY}`;
-        
-        if (!grid.has(key)) grid.set(key, []);
-        grid.get(key).push({ obj, index });
-    });
+    const removed = new Set();
 
-    grid.forEach(objects => {
-        for (let i = 0; i < objects.length; i++) {
-            for (let j = i + 1; j < objects.length; j++) {
-                const { obj: obj1, index: idx1 } = objects[i];
-                const { obj: obj2, index: idx2 } = objects[j];
-                
-                const dx = obj1.x - obj2.x;
-                const dy = obj1.y - obj2.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < obj1.radius + obj2.radius) {
-                    if (currentGameMode) {
-                        const winner = currentGameMode.onCollision(obj1, obj2);
-                        
-                        if (winner === obj1) {
-                            if (!objectsToRemove.includes(idx2)) {
-                                objectsToRemove.push(idx2);
-                            }
-                        } else if (winner === obj2) {
-                            if (!objectsToRemove.includes(idx1)) {
-                                objectsToRemove.push(idx1);
-                            }
-                        }
-                    }
-                }
+    for (let i = 0; i < rpsObjects.length; i++) {
+        const obj1 = rpsObjects[i];
+        if (removed.has(obj1)) continue;
+
+        for (let j = i + 1; j < rpsObjects.length; j++) {
+            const obj2 = rpsObjects[j];
+            if (removed.has(obj2)) continue;
+
+            const dx = obj1.x - obj2.x;
+            const dy = obj1.y - obj2.y;
+            const minDistance = obj1.radius + obj2.radius;
+            if (dx * dx + dy * dy >= minDistance * minDistance) continue;
+
+            const winner = currentGameMode.onCollision(obj1, obj2);
+            if (winner === obj1) {
+                removed.add(obj2);
+            } else if (winner === obj2) {
+                removed.add(obj1);
+                break;
             }
         }
-    });
-    
-    objectsToRemove.sort((a, b) => b - a);
-    objectsToRemove.forEach(index => {
-        rpsObjects.splice(index, 1);
-    });
-}
-
-function getRPSWinner(type1, type2) {
-    if (type1 === type2) {
-        return null; 
     }
-    
-    if (type1 === 'Rock' && type2 === 'Scissors') return 'Rock';
-    if (type1 === 'Paper' && type2 === 'Rock') return 'Paper';
-    if (type1 === 'Scissors' && type2 === 'Paper') return 'Scissors';
-    
-    if (type2 === 'Rock' && type1 === 'Scissors') return 'Rock';
-    if (type2 === 'Paper' && type1 === 'Rock') return 'Paper';
-    if (type2 === 'Scissors' && type1 === 'Paper') return 'Scissors';
-    
-    return null; 
-}
 
-function drawFlashEffects() {
-    flashEffects.forEach(flash => {
-        ctx.save();
-        ctx.globalAlpha = flash.opacity;
-        ctx.fillStyle = '#FFD700'; // Gold flash
-        ctx.beginPath();
-        ctx.arc(flash.x, flash.y, flash.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-    });
+    if (removed.size > 0) {
+        rpsObjects = rpsObjects.filter(obj => !removed.has(obj));
+    }
 }
 
 function drawAllObjects() {
@@ -450,32 +373,14 @@ function drawAllObjects() {
             ctx.shadowBlur = 20 * obj.pulseIntensity;
         }
         
-        // Draw images for Rock, Scissors, and Paper if loaded, otherwise draw circles
-        if (obj.type === 'Rock' && rockImage.complete && rockImage.naturalWidth > 0) {
-            // Draw rock image - make it bigger than the circles
+        const image = rpsImages[obj.type];
+        if (image.complete && image.naturalWidth > 0) {
+            // Images are drawn bigger than the collision circle
             const size = obj.radius * 3;
             const offset = size / 2;
-            ctx.drawImage(rockImage, obj.x - offset, obj.y - offset, size, size);
-        } else if (obj.type === 'Scissors' && scissorsImage.complete && scissorsImage.naturalWidth > 0) {
-            // Draw scissors image - make it bigger than the circles
-            const size = obj.radius * 3;
-            const offset = size / 2;
-            ctx.drawImage(scissorsImage, obj.x - offset, obj.y - offset, size, size);
-        } else if (obj.type === 'Paper' && paperImage.complete && paperImage.naturalWidth > 0) {
-            // Draw paper image - make it bigger than the circles
-            const size = obj.radius * 3;
-            const offset = size / 2;
-            ctx.drawImage(paperImage, obj.x - offset, obj.y - offset, size, size);
+            ctx.drawImage(image, obj.x - offset, obj.y - offset, size, size);
         } else {
-            // Draw colored circles with letters (for Paper, Scissors, or Rock if image failed)
-            let drawColor = obj.color;
-            if (obj.pulseIntensity > 0) {
-                if (obj.color === 'red') drawColor = `rgba(255, ${100 * (1 - obj.pulseIntensity)}, ${100 * (1 - obj.pulseIntensity)}, 1)`;
-                else if (obj.color === 'blue') drawColor = `rgba(${100 * (1 - obj.pulseIntensity)}, ${100 * (1 - obj.pulseIntensity)}, 255, 1)`;
-                else if (obj.color === 'yellow') drawColor = `rgba(255, 255, ${100 * (1 - obj.pulseIntensity)}, 1)`;
-            }
-       
-            ctx.fillStyle = drawColor;
+            ctx.fillStyle = obj.color;
             ctx.beginPath();
             ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI * 2);
             ctx.fill();
@@ -491,7 +396,7 @@ function drawAllObjects() {
         ctx.restore();
     });
     // Draw powerups/effects (if any)
-    if (currentGameMode && currentGameMode.drawPowerups) {
+    if (currentGameMode) {
         currentGameMode.drawPowerups(ctx);
     }
 }
@@ -502,7 +407,16 @@ function clearCanvas()
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
+function render() {
+    clearCanvas();
+    drawAllObjects();
+}
+
 document.addEventListener('keydown', (event) => {
+    // Shortcuts only apply on the game screen, and must not swallow typing or browser shortcuts
+    if (!currentGameMode || event.target instanceof HTMLInputElement) return;
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+
     switch(event.code) {
         case 'Space':
             event.preventDefault();

@@ -1,57 +1,53 @@
 // Base GameMode class that defines the interface for all game modes
 class GameMode {
-    // Powerup/Effect system hooks - override in specific modes
-    spawnPowerup(type, options) {
-        // Called to spawn a new powerup/effect
-        // type: string, options: object (position, duration, etc)
-    }
-
-    applyPowerup(target, powerup) {
-        // Called to apply a powerup/effect to a target (object, player, etc)
-    }
-
-    updatePowerups(deltaTime) {
-        // Called every frame to update powerup/effect state
-    }
-
-    removePowerup(powerup) {
-        // Called to remove a powerup/effect
-    }
-
-    drawPowerups(ctx) {
-        // Called to render powerups/effects (if needed)
-    }
     constructor(name) {
         this.name = name;
-        this.isActive = false;
     }
 
     // Lifecycle methods - override these in specific modes
     init() {
-        // Called when the mode is activated
+        // Called when the game starts or is reset; populate rpsObjects here
     }
 
-    update(deltaTime) {
+    update(deltaMs) {
         // Called every frame during game loop
     }
 
     reset() {
-        // Called when game is reset
+        // Called when game is reset, before init()
     }
 
     destroy() {
         // Called when switching away from this mode
     }
 
+    // Powerup/Effect system hooks - override in specific modes
+    updatePowerups(deltaMs) {
+        // Called every frame to update powerup/effect state
+    }
+
+    drawPowerups(ctx) {
+        // Called to render powerups/effects (if needed)
+    }
+
     // Game event handlers - override these in specific modes
     onCollision(obj1, obj2) {
-        // Return the winner object, or null for tie
-        // Default RPS logic
+        // Return the winner object (the loser is removed), or null for tie
         return this.getRPSWinner(obj1, obj2);
     }
 
     onSpawn(object) {
         // Called when a new object is spawned
+    }
+
+    canStart() {
+        // Return false to block the Start button (e.g. until the player has made a choice)
+        return true;
+    }
+
+    canSpawn() {
+        // Return false to block manual spawning
+        return true;
     }
 
     checkGameEnd() {
@@ -64,22 +60,8 @@ class GameMode {
 
     getGameEndMessage() {
         // Return message to display when game ends
-        const counts = this.getTypeCounts();
-        const winner = Object.keys(counts).find(type => counts[type] > 0);
+        const winner = this.getWinningType();
         return winner ? `Game Over! ${winner} wins!` : 'Game Over! No winners!';
-    }
-
-    // Input event handlers - override these in specific modes
-    onMouseMove(x, y) {
-        // Handle mouse movement
-    }
-
-    onMouseClick(x, y) {
-        // Handle mouse clicks
-    }
-
-    onKeyPress(key) {
-        // Handle key presses
     }
 
     // UI management - override these in specific modes
@@ -98,25 +80,17 @@ class GameMode {
     // Timer and scoring hooks - override in specific modes for custom logic
     getTime() {
         // Return the current game time (in seconds)
-        if (typeof gameStats !== 'undefined') {
-            return gameStats.gameTime;
-        }
-        return 0;
+        return Math.floor(gameStats.elapsedMs / 1000);
     }
 
     getScore() {
         // Return the current score (e.g., total battles)
-        if (typeof gameStats !== 'undefined') {
-            return gameStats.totalBattles;
-        }
-        return 0;
+        return gameStats.totalBattles;
     }
 
-    updateTimer(deltaTime) {
-        // Update timer logic (called every frame)
-        if (typeof gameStats !== 'undefined' && gameStats.gameStartTime > 0) {
-            gameStats.gameTime = Math.floor((Date.now() - gameStats.gameStartTime) / 1000);
-        }
+    updateTimer(deltaMs) {
+        // Called every frame while the game is running
+        gameStats.elapsedMs += deltaMs;
     }
 
     // Helper methods available to all modes
@@ -133,10 +107,12 @@ class GameMode {
     }
 
     getTypeCounts() {
-        const counts = { Rock: 0, Paper: 0, Scissors: 0 };
-        rpsObjects.forEach(obj => {
-            counts[obj.type]++;
-        });
-        return counts;
+        return countTypes();
+    }
+
+    getWinningType() {
+        // The first type still on screen - only meaningful once checkGameEnd() is true
+        const counts = this.getTypeCounts();
+        return Object.keys(counts).find(type => counts[type] > 0);
     }
 }
