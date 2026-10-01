@@ -298,8 +298,11 @@ function updateStatsDisplay() {
 function updateAllObjects(step) 
 {
     rpsObjects.forEach(obj => {
-        obj.x += obj.speedX * step;
-        obj.y += obj.speedY * step;
+        const customMove = currentGameMode && currentGameMode.moveObject(obj, step);
+        if (!customMove) {
+            obj.x += obj.speedX * step;
+            obj.y += obj.speedY * step;
+        }
 
         if (obj.winAnimation > 0) {
             obj.winAnimation = Math.max(0, obj.winAnimation - step);
@@ -313,21 +316,27 @@ function updateAllObjects(step)
             obj.pulseIntensity = 0;
         }
 
-        // Clamp to the wall so an object that overshoots can't flip direction every frame
-        if (obj.x - obj.radius < 0) {
-            obj.x = obj.radius;
-            obj.speedX = Math.abs(obj.speedX);
-        } else if (obj.x + obj.radius > canvas.width) {
-            obj.x = canvas.width - obj.radius;
-            obj.speedX = -Math.abs(obj.speedX);
-        }
-    
-        if (obj.y - obj.radius < 0) {
-            obj.y = obj.radius;
-            obj.speedY = Math.abs(obj.speedY);
-        } else if (obj.y + obj.radius > canvas.height) {
-            obj.y = canvas.height - obj.radius;
-            obj.speedY = -Math.abs(obj.speedY);
+        // Player-controlled objects stay inside the arena without bouncing.
+        // Everyone else clamps to the wall so an overshoot can't flip direction every frame.
+        if (customMove) {
+            obj.x = Math.max(obj.radius, Math.min(canvas.width - obj.radius, obj.x));
+            obj.y = Math.max(obj.radius, Math.min(canvas.height - obj.radius, obj.y));
+        } else {
+            if (obj.x - obj.radius < 0) {
+                obj.x = obj.radius;
+                obj.speedX = Math.abs(obj.speedX);
+            } else if (obj.x + obj.radius > canvas.width) {
+                obj.x = canvas.width - obj.radius;
+                obj.speedX = -Math.abs(obj.speedX);
+            }
+
+            if (obj.y - obj.radius < 0) {
+                obj.y = obj.radius;
+                obj.speedY = Math.abs(obj.speedY);
+            } else if (obj.y + obj.radius > canvas.height) {
+                obj.y = canvas.height - obj.radius;
+                obj.speedY = -Math.abs(obj.speedY);
+            }
         }
     });
 }
@@ -409,6 +418,9 @@ function clearCanvas()
 
 function render() {
     clearCanvas();
+    if (currentGameMode) {
+        currentGameMode.drawBackground(ctx);
+    }
     drawAllObjects();
 }
 
@@ -416,6 +428,7 @@ document.addEventListener('keydown', (event) => {
     // Shortcuts only apply on the game screen, and must not swallow typing or browser shortcuts
     if (!currentGameMode || event.target instanceof HTMLInputElement) return;
     if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (typeof currentGameMode.onKeyDown === 'function' && currentGameMode.onKeyDown(event)) return;
 
     switch(event.code) {
         case 'Space':
@@ -467,5 +480,11 @@ document.addEventListener('keydown', (event) => {
             event.preventDefault();
             setGameSpeed(10, ludicrousBtn); // L for Ludicrous
             break;
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    if (currentGameMode && typeof currentGameMode.onKeyUp === 'function') {
+        currentGameMode.onKeyUp(event);
     }
 });

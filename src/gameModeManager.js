@@ -10,7 +10,7 @@ class GameModeManager {
             },
             timed_battle: {
                 name: 'Timed Battle',
-                class: null,
+                class: TimedBattleMode,
                 description: 'Continuous spawning for a set time'
             },
             prediction_mode: {
@@ -20,22 +20,22 @@ class GameModeManager {
             },
             survival_mode: {
                 name: 'Survival Mode',
-                class: null,
+                class: SurvivalMode,
                 description: 'Control your character and survive'
             },
             powerup_chaos: {
                 name: 'Powerup Chaos',
-                class: null,
+                class: PowerupChaosMode,
                 description: 'Classic gameplay with power-ups'
             },
             king_of_the_hill: {
                 name: 'King of the Hill',
-                class: null,
+                class: KingOfTheHillMode,
                 description: 'Control the center territory'
             },
             elimination_tournament: {
                 name: 'Tournament',
-                class: null,
+                class: TournamentMode,
                 description: 'Single elimination bracket style'
             },
             infection_mode: {
@@ -45,7 +45,7 @@ class GameModeManager {
             },
             resource_management: {
                 name: 'Resource Management',
-                class: null,
+                class: ResourceManagementMode,
                 description: 'Limited spawns require strategy'
             }
         };
@@ -77,6 +77,14 @@ class GameModeManager {
         if (!modeInfo.class) {
             alert(`${modeInfo.name} is coming soon!`);
             return;
+        }
+
+        if (this.currentMode) {
+            pauseGame();
+            this.currentMode.removeUI();
+            this.currentMode.destroy();
+            this.currentMode = null;
+            currentGameMode = null;
         }
 
         this.currentMode = new modeInfo.class();

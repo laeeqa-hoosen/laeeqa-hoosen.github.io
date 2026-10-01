@@ -115,4 +115,59 @@ class GameMode {
         const counts = this.getTypeCounts();
         return Object.keys(counts).find(type => counts[type] > 0);
     }
+
+    // Return true when this mode moves the object itself (survival player)
+    moveObject() {
+        return false;
+    }
+
+    drawBackground() {
+        // Drawn under the icons. Override for zones and arenas.
+    }
+
+    defeats(type) {
+        const beats = { Rock: 'Scissors', Paper: 'Rock', Scissors: 'Paper' };
+        return beats[type];
+    }
+
+    counterTo(type) {
+        const losesTo = { Rock: 'Paper', Paper: 'Scissors', Scissors: 'Rock' };
+        return losesTo[type];
+    }
+
+    separatePair(obj1, obj2) {
+        const dx = obj2.x - obj1.x;
+        const dy = obj2.y - obj1.y;
+        let dist = Math.hypot(dx, dy);
+        if (dist === 0) {
+            dist = 0.01;
+        }
+        const nx = dx / dist;
+        const ny = dy / dist;
+        const overlap = obj1.radius + obj2.radius - dist;
+        if (overlap > 0) {
+            obj1.x -= nx * overlap / 2;
+            obj1.y -= ny * overlap / 2;
+            obj2.x += nx * overlap / 2;
+            obj2.y += ny * overlap / 2;
+        }
+
+        // Only cancel velocity that is still closing, so allies don't stick or speed up
+        const closing = (obj2.speedX - obj1.speedX) * nx + (obj2.speedY - obj1.speedY) * ny;
+        if (closing < 0) {
+            const impulse = closing / 2;
+            obj1.speedX += impulse * nx;
+            obj1.speedY += impulse * ny;
+            obj2.speedX -= impulse * nx;
+            obj2.speedY -= impulse * ny;
+        }
+
+        this.clampObject(obj1);
+        this.clampObject(obj2);
+    }
+
+    clampObject(obj) {
+        obj.x = Math.max(obj.radius, Math.min(canvas.width - obj.radius, obj.x));
+        obj.y = Math.max(obj.radius, Math.min(canvas.height - obj.radius, obj.y));
+    }
 }

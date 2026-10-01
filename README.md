@@ -8,8 +8,6 @@ An interactive rock-paper-scissors battle royale with multiple game modes, inspi
 - **Classic Mode** - The original RPS battle royale. Equal numbers of each type fight until one remains victorious.
 - **Infection Mode** - Losers don't die, they get infected. One type spreads like a virus until it has converted everyone.
 - **Prediction Mode** - Predict the winner and score points for accuracy. Test your strategic foresight!
-
-### Coming Soon Game Modes
 - **Timed Battle** - Continuous spawning for a set time. Most kills wins in this fast-paced challenge.
 - **Survival Mode** - Control your character and survive as long as possible against endless waves.
 - **Powerup Chaos** - Classic gameplay enhanced with game-changing power-ups and special abilities.
@@ -46,6 +44,46 @@ An interactive rock-paper-scissors battle royale with multiple game modes, inspi
 - Points, accuracy and best streak carry over between rounds until you go back to the menu
 - Press Reset after a round to make your next prediction
 
+### Timed Battle Mechanics
+- Starts like Classic Mode, then a new random icon spawns every 2 seconds
+- The round lasts 45 seconds and does not end early when only one type is left
+- Each elimination counts as a kill for the winner's type
+- When time runs out, the type with the most kills wins (remaining icons break a kill tie)
+
+### Survival Mode Mechanics
+- Pick Rock, Paper, or Scissors and steer it with WASD, the arrow keys, or the on-screen pad
+- Waves of the other two types spawn from the edges and get faster over time
+- Beating an enemy removes it; losing to one ends the run
+- Enemies still fight each other. Your best time and defeat count last until you leave the mode
+- Starting Count sets how many enemies appear when the run begins
+
+### Powerup Chaos Mechanics
+- Classic elimination, with pickups appearing on the field
+- Speed briefly makes an icon faster, Grow and Shrink change its size, and Shield blocks the next loss
+- A green ring means shield, a gold ring means a speed boost
+- Last type standing still wins
+
+### King of the Hill Mechanics
+- Classic fights, plus a marked circle in the center
+- Every icon inside the circle banks control time for its type
+- The first type to bank 20 seconds of control takes the crown
+- If the field is wiped first, whoever held the hill the longest wins
+
+### Tournament Mechanics
+- The three types are shuffled into a bracket: two play a semifinal, one gets a bye to the final
+- Each match is first to 2 round wins
+- A round is a Classic fight using only the two types in that match
+- Press Reset after a round to continue the series. Manual spawning is disabled
+- After a champion is crowned, Reset deals a new bracket
+
+### Resource Management Mechanics
+- You start a campaign with a budget based on Starting Count (6 to 18)
+- Before each battle, spend that budget to field Rock, Paper, and Scissors
+- The AI gets the same number of units and puts most of them into whatever beats your largest group
+- Your units (mint dot) do not eliminate each other; the AI's units (pink dot) don't either
+- Wipe the AI for +5 resources. Lose and you drop 4. Reset during a battle counts as a loss
+- Reach 30 resources to win the campaign. Drop below 1 and the campaign ends
+
 ### Game Controls
 - **Start/Pause** - Control the game flow
 - **Reset** - Start a fresh round
@@ -70,5 +108,4 @@ An interactive rock-paper-scissors battle royale with multiple game modes, inspi
 - Modular game mode system with per-mode UI hooks
 
 ## Development Status
-- Classic, Infection and Prediction modes fully implemented
-- Additional game modes in development
+- All nine game modes are implemented
