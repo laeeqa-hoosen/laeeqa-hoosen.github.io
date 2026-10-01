@@ -33,9 +33,9 @@ let gameStats =
 
 const RPS_TYPES =
 {
-    Rock: {color: '#e74c3c', letter: 'R', image: './assets/rock.png'},
-    Paper: {color: '#3498db', letter: 'P', image: './assets/paper.png'},
-    Scissors: {color: '#f1c40f', letter: 'S', image: './assets/scissors.png'}
+    Rock: {color: '#ff6b8a', letter: 'R', image: './assets/rock.png'},
+    Paper: {color: '#6c9bff', letter: 'P', image: './assets/paper.png'},
+    Scissors: {color: '#f0b429', letter: 'S', image: './assets/scissors.png'}
 };
 
 // Objects fall back to a coloured circle if their image fails to load
@@ -403,7 +403,7 @@ function drawAllObjects() {
 
 function clearCanvas()
 {
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = '#fff7fb';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
